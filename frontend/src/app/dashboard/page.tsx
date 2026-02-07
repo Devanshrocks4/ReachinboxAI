@@ -61,7 +61,8 @@ export default function Dashboard() {
           subject: data.subject,
           body: data.body,
           recipients: data.recipients.split(',').map((r: string) => r.trim()),
-          scheduledAt: data.scheduledAt,
+          // send full ISO time (UTC) so backend stores exact instant
+          scheduledAt: new Date(data.scheduledAt).toISOString(),
           sender: 'demo@reachinbox.ai',
         }),
       });
