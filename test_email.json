@@ -1,0 +1,7 @@
+{
+  "subject": "Test Email from REACHINBOX",
+  "body": "Hello! This is a test email from the REACHINBOX AI application.",
+  "sender": "noreply@reachinbox.ai",
+  "recipients": ["user@example.com"],
+  "scheduledAt": "2026-02-06T15:00:00Z"
+}
