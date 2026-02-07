@@ -96,4 +96,4 @@ export default function EmailTable({ emails, type }: EmailTableProps) {
       </table>
     </div>
   );
-
+}

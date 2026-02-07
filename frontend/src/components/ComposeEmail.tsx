@@ -81,4 +81,4 @@ export default function ComposeEmail({ onSubmit }: ComposeEmailProps) {
       </form>
     </div>
   );
-
+}
