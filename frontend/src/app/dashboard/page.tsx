@@ -1,15 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import ComposeEmail from '@/components/ComposeEmail';
 import EmailTable from '@/components/EmailTable';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
 type Email = {
   id: string;
   subject: string;
-  recipients: string[];
+  recipients: string[] | string;
   scheduledAt: string;
   status: 'PENDING' | 'SENT' | 'FAILED';
   sentAt?: string;
@@ -19,25 +20,25 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'scheduled' | 'sent'>('scheduled');
   const [scheduledEmails, setScheduledEmails] = useState<Email[]>([]);
   const [sentEmails, setSentEmails] = useState<Email[]>([]);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchEmails();
   }, []);
 
   const fetchEmails = async () => {
+    setLoading(true);
     try {
       const [scheduledRes, sentRes] = await Promise.all([
-        fetch('/api/emails/scheduled'),
-        fetch('/api/emails/sent')
+        fetch(`${API_URL}/emails/scheduled`),
+        fetch(`${API_URL}/emails/sent`)
       ]);
 
       const scheduled = await scheduledRes.json();
       const sent = await sentRes.json();
 
-      setScheduledEmails(scheduled);
-      setSentEmails(sent);
+      setScheduledEmails(Array.isArray(scheduled) ? scheduled : []);
+      setSentEmails(Array.isArray(sent) ? sent : []);
     } catch (error) {
       console.error('Failed to fetch emails:', error);
     } finally {
@@ -45,63 +46,80 @@ export default function Dashboard() {
     }
   };
 
-  const handleCompose = async (data: any) => {
+  const handleCompose = async (data: { subject: string; body: string; recipients: string; scheduledAt: string }) => {
     try {
-      const response = await fetch('/api/emails/schedule', {
+      const response = await fetch(`${API_URL}/emails/schedule`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          subject: data.subject,
+          body: data.body,
+          recipients: data.recipients.split(',').map((r: string) => r.trim()),
+          scheduledAt: data.scheduledAt,
+          sender: 'demo@reachinbox.ai',
+        }),
       });
 
       if (response.ok) {
-        fetchEmails(); // Refresh
+        fetchEmails();
+      } else {
+        alert('Failed to schedule email');
       }
     } catch (error) {
-      console.error('Failed to schedule email:', error);
+      console.error('Error scheduling email:', error);
+      alert('Error scheduling email');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <main style={{ minHeight: '100vh', background: '#f5f5f5' }}>
       <Header />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Email Scheduler</h1>
-        </div>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '20px' }}>Email Scheduler</h1>
 
-        <div className="mb-8">
+        <div style={{ marginBottom: '30px' }}>
           <ComposeEmail onSubmit={handleCompose} />
         </div>
 
-        <div className="bg-white shadow rounded-lg">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex">
+        <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <div style={{ borderBottom: '1px solid #ddd', padding: '0' }}>
+            <div style={{ display: 'flex' }}>
               <button
                 onClick={() => setActiveTab('scheduled')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'scheduled'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                style={{
+                  padding: '12px 20px',
+                  border: 'none',
+                  borderBottom: activeTab === 'scheduled' ? '3px solid #0066cc' : 'none',
+                  background: 'transparent',
+                  color: activeTab === 'scheduled' ? '#0066cc' : '#666',
+                  cursor: 'pointer',
+                  fontWeight: activeTab === 'scheduled' ? '600' : '400',
+                  fontSize: '14px',
+                }}
               >
-                Scheduled Emails
+                Scheduled ({scheduledEmails.length})
               </button>
               <button
                 onClick={() => setActiveTab('sent')}
-                className={`ml-8 py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'sent'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                style={{
+                  padding: '12px 20px',
+                  border: 'none',
+                  borderBottom: activeTab === 'sent' ? '3px solid #0066cc' : 'none',
+                  background: 'transparent',
+                  color: activeTab === 'sent' ? '#0066cc' : '#666',
+                  cursor: 'pointer',
+                  fontWeight: activeTab === 'sent' ? '600' : '400',
+                  fontSize: '14px',
+                }}
               >
-                Sent Emails
+                Sent ({sentEmails.length})
               </button>
-            </nav>
+            </div>
           </div>
 
-          <div className="p-6">
+          <div style={{ padding: '20px' }}>
             {loading ? (
-              <div className="text-center py-8">Loading...</div>
+              <div style={{ textAlign: 'center', padding: '40px' }}>Loading...</div>
             ) : (
               <EmailTable
                 emails={activeTab === 'scheduled' ? scheduledEmails : sentEmails}
@@ -111,6 +129,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
