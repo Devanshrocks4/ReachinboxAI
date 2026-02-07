@@ -7,8 +7,8 @@ export default function Header() {
 
   useEffect(() => {
     setUser({
-      name: 'John Doe',
-      email: 'john@example.com',
+      name: 'Devansh Gupta',
+      email: 'guptadevansh52003@gmail.com',
     });
   }, []);
 
