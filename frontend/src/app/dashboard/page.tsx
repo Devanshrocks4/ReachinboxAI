@@ -48,6 +48,12 @@ export default function Dashboard() {
 
   const handleCompose = async (data: { subject: string; body: string; recipients: string; scheduledAt: string }) => {
     try {
+      // Debug: show what time is being sent
+      const scheduledDate = new Date(data.scheduledAt);
+      console.log('Scheduling email for:', data.scheduledAt);
+      console.log('ISO string:', scheduledDate.toISOString());
+      console.log('Local timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
+
       const response = await fetch(`${API_URL}/emails/schedule`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -61,6 +67,7 @@ export default function Dashboard() {
       });
 
       if (response.ok) {
+        alert('Email scheduled successfully!');
         fetchEmails();
       } else {
         alert('Failed to schedule email');
