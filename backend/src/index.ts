@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { config } from './config';
 import emailRoutes from './routes/emailRoutes';
-// import './queues/emailQueue'; // Initialize queue and worker
+import './queues/emailQueue'; // Initialize queue and worker
 
 const app = express();
 
